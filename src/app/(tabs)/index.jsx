@@ -77,7 +77,7 @@ export default function Index() {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 10 }}
         columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 12 }}
         renderItem={({ item }) => (
-          <Link href={{ pathname: '/[movieId]', params: { movieId: item.id }}} asChild>
+          <Link href={{ pathname: '/movie/[movieId]', params: { movieId: item.id }}} asChild>
             <TouchableOpacity style={{ flex: 1, marginHorizontal: 6 }}>
               <MovieCard title={item.title} />
             </TouchableOpacity>
