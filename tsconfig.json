@@ -8,13 +8,18 @@
       ],
       "@/assets/*": [
         "./assets/*"
-      ]
+      ],
+      "@root/*": [
+        "./*"
+      ],
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts", 
+    "src/app/index.jsx", 
+    "src/app/_layout.jsx"  
   ]
 }
