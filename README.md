@@ -2,7 +2,7 @@ Prerequisites
 Android studio and Android emulator
 Node.js
 
-
+npm install
 npm start
 
 
