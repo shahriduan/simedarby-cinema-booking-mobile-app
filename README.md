@@ -1,45 +1,32 @@
-Prerequisites
-Android studio and Android emulator
-Node.js
+# <font color="#89CFF0">Setup Instruction</font>
 
-npm install
-npm start
+## 🚀 Prerequisites
 
+Before you begin, make sure you have the following installed:
 
+- [Node.js](https://nodejs.org/) (v18 or later)
+- [Java Development Kit (JDK)](https://www.oracle.com/java/technologies/downloads/) (v17 recommended)
+- [Android Studio](https://developer.android.com/studio) with an Android emulator configured
+- [Expo Go](https://expo.dev/go) on your physical device (optional)
 
-# Welcome to your Expo app 👋
-
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
-
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+## 🛠️ React Native Setup
+1. Please set this variable inside <font color="orange">**.env**</font> file 
 ```
+API_ENDPOINT=
+```
+2. Open terminal on this project folder and run this command
+   - Run `npm install`
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 📱 How to Run the Mobile App
+1. **Start the Development Server** <br>
+Run the following command in your project root terminal to boot up the Metro Bundler:
+```
+npm start
+```
+2. **Launch on a Device or Emulator** <br>
+- 🤖 Android Emulator: Press a in your terminal window to open the app inside Android Studio's virtual device.
+- 📲 Physical Device: Android: Open the Expo Go app and tap "Scan QR Code".
+
+
+The Fix for Android Emulators: Replace localhost with 10.0.2.2 (e.g., http://10.0.2.2:3000/movies).
+The Fix for Physical Devices: Use your computer's actual local IP address (e.g., http://192.168.1.XX:3000), making sure both your computer and your phone are on the exact same Wi-Fi network.

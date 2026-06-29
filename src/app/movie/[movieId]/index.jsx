@@ -113,7 +113,7 @@ export default function Index() {
 
       {/* Book ticket */}
       <View style={styles.bookContainer}>
-        <Link href={{ pathname: '/booking/payment-method' }} asChild>
+        <Link href={{ pathname: '/booking/fnb' }} asChild>
         {/* <Link href={{ pathname: '/movie/[movieId]/booking/seats', params: { movieId: 2 }}} asChild> */}
           <TouchableOpacity style={styles.bookButton} activeOpacity={0.85}>
             <Text style={styles.bookText}>Book Ticket</Text>
