@@ -7,7 +7,7 @@ export default function BookingSuccess() {
 
   const goToHome = () => {
     router.dismissAll();
-    router.replace('/');
+    router.replace('/(tabs)');
   }
 
   const goToTickets = () => {
