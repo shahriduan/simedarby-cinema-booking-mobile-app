@@ -27,6 +27,6 @@ npm start
 - 🤖 Android Emulator: Press a in your terminal window to open the app inside Android Studio's virtual device.
 - 📲 Physical Device: Android: Open the Expo Go app and tap "Scan QR Code".
 
-
+php artisan serve --host=0.0.0.0 --port=8000
 The Fix for Android Emulators: Replace localhost with 10.0.2.2 (e.g., http://10.0.2.2:3000/movies).
 The Fix for Physical Devices: Use your computer's actual local IP address (e.g., http://192.168.1.XX:3000), making sure both your computer and your phone are on the exact same Wi-Fi network.

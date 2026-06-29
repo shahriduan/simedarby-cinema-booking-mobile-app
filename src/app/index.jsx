@@ -1,14 +1,87 @@
+import Snackbar from '@/components/common/Snackbar';
+import { routeName } from '@/services/api';
+import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
+  Text,
   TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
-import { IconButton, Text } from 'react-native-paper';
+import { IconButton } from 'react-native-paper';
+
+// Login Screen
+export default function Index() {
+  const router = useRouter();
+
+  // Form
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // Snackbar UI
+  const [snackbarVisible, setSnackbarVisible] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState(''); 
+
+  const isReady = true;
+  // const isReady = email.includes('@') && password.length > 0;
+
+  function authenticate() {
+    axios.post(routeName({ name: 'auth' }), {
+        email: email,
+        password: password
+      })
+      .then(response => {
+        if (response.data.status == true) {
+          console.log(response.data.data.token);
+          router.replace('/(tabs)')
+        } else {
+          setSnackbarVisible(true)
+          setSnackbarMessage(response.data.message);
+        }
+        
+      })
+  }
+
+  return (
+    <KeyboardAvoidingView style={styles.root} behavior="height">
+      <Snackbar visible={snackbarVisible} message={snackbarMessage} onDismiss={() => setSnackbarVisible(false)} />
+
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Sign in</Text>
+
+          <AppInput
+            label="Email"
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+          />
+
+          <AppInput
+            label="Password"
+            placeholder="Enter your password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+
+          <TouchableOpacity
+            style={[styles.loginBtn, !isReady && styles.loginBtnDisabled]}
+            activeOpacity={0.85}
+            disabled={!isReady}
+            onPress={() => authenticate()}>
+            <Text style={styles.loginBtnText}>Sign in</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+}
 
 function AppInput({ label, placeholder, value, onChangeText, secureTextEntry, keyboardType }) {
   const [focused, setFocused] = useState(false);
@@ -43,49 +116,6 @@ function AppInput({ label, placeholder, value, onChangeText, secureTextEntry, ke
         )}
       </View>
     </View>
-  );
-}
-
-export default function Index() {
-  const router = useRouter();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const isReady = email.includes('@') && password.length > 0;
-
-  return (
-    <KeyboardAvoidingView style={styles.root} behavior="height">
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Sign in</Text>
-
-          <AppInput
-            label="Email"
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-          />
-
-          <AppInput
-            label="Password"
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-
-          <TouchableOpacity
-            style={[styles.loginBtn, !isReady && styles.loginBtnDisabled]}
-            activeOpacity={0.85}
-            disabled={!isReady}
-            onPress={() => router.replace('/(tabs)')}>
-            <Text style={styles.loginBtnText}>Sign in</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
   );
 }
 
