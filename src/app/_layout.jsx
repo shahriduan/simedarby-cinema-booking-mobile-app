@@ -6,7 +6,7 @@ import { PaperProvider } from 'react-native-paper';
 export default function RootLayout() {
   return (
     <PaperProvider theme={theme}>
-      <StatusBar barStyle="light-content" backgroundColor={theme.colors.background} />
+      <StatusBar barStyle="light-content" translucent backgroundColor={theme.colors.background} />
       <Stack screenOptions={{ headerShown: false }} />
     </PaperProvider>
   );

@@ -113,8 +113,7 @@ export default function Index() {
 
       {/* Book ticket */}
       <View style={styles.bookContainer}>
-        <Link href={{ pathname: '/booking/fnb' }} asChild>
-        {/* <Link href={{ pathname: '/movie/[movieId]/booking/seats', params: { movieId: 2 }}} asChild> */}
+        <Link href={{ pathname: '/movie/[movieId]/booking-seats', params: { movieId: 2 }}} asChild>
           <TouchableOpacity style={styles.bookButton} activeOpacity={0.85}>
             <Text style={styles.bookText}>Book Ticket</Text>
           </TouchableOpacity>
@@ -128,6 +127,7 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: theme.colors.background,
+    paddingTop: 35
   },
   hero: {
     height: 220,
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
-    paddingTop: 44,
+    paddingTop: 20,
   },
   heroFooter: {
     flexDirection: 'row',

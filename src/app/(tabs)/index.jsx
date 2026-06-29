@@ -93,7 +93,8 @@ AppRegistry.registerComponent(expo.name, () => Index);
 const styles = StyleSheet.create({
   root: { 
     flex: 1, 
-    backgroundColor: theme.colors.background 
+    backgroundColor: theme.colors.background,
+    paddingTop: 35
   },
   header: { 
     flexDirection: 'row', 
