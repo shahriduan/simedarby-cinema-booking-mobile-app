@@ -1,18 +1,11 @@
 import Snackbar from '@/components/common/Snackbar';
 import { routeName } from '@/services/api';
+import { authStorage } from '@/services/localStorage';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
-} from 'react-native';
-import { IconButton } from 'react-native-paper';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, IconButton } from 'react-native-paper';
 
 // Login Screen
 export default function Index() {
@@ -26,24 +19,27 @@ export default function Index() {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState(''); 
 
-  const isReady = true;
-  // const isReady = email.includes('@') && password.length > 0;
+  // Behaviour
+  const [isLoading, setIsLoading] = useState(false)
 
-  function authenticate() {
-    axios.post(routeName({ name: 'auth' }), {
+  async function authenticate() {
+    setIsLoading(true);
+
+    await axios.post(routeName({ name: 'auth' }), {
         email: email,
         password: password
       })
       .then(response => {
         if (response.data.status == true) {
-          console.log(response.data.data.token);
-          router.replace('/(tabs)')
+          authStorage.setToken(response.data.data.token);
+          router.replace('/(tabs)/movies');
         } else {
           setSnackbarVisible(true)
           setSnackbarMessage(response.data.message);
         }
-        
       })
+
+    setIsLoading(false);
   }
 
   return (
@@ -71,11 +67,15 @@ export default function Index() {
           />
 
           <TouchableOpacity
-            style={[styles.loginBtn, !isReady && styles.loginBtnDisabled]}
+            style={[styles.loginBtn, isLoading && styles.loginBtnDisabled]}
             activeOpacity={0.85}
-            disabled={!isReady}
+            disabled={isLoading}
             onPress={() => authenticate()}>
-            <Text style={styles.loginBtnText}>Sign in</Text>
+            {
+              isLoading == false 
+                ? <Text style={styles.loginBtnText}>Sign in</Text> 
+                : <ActivityIndicator animating={true} color="white"  />
+            }
           </TouchableOpacity>
         </View>
       </ScrollView>
