@@ -32,8 +32,62 @@ Run the following command in your project root terminal to boot up the Metro Bun
 
    npx expo start
    ```
-
+   Output:
+    <img src="assessment-docs/terminal/expo.png" width="100%" alt="Login Screen"/>
 2. **Launch on a Device or Emulator**
-- Android Emulator: Press a in your terminal window to open the app inside Android Studio's virtual device.
-- Physical Device (Android): Open the Expo Go app and tap "Scan QR Code".
+- Android Emulator: Press `a` in your terminal window to open the app inside Android Studio's virtual device.
+- Physical Device (Android): Open the Expo Go app and tap "Scan QR Code". Then scan the QR code that is showing inside your terminal.
 
+# <font color="#89CFF0">Screenshots</font>
+<table border="0">
+  <tr>
+    <td>
+      <img src="assessment-docs/screenshots/login-screen.png" width="100%" alt="Login Screen"/>
+    </td>
+    <td>
+      <img src="assessment-docs/screenshots/movies-list-screen.png" width="100%" alt="Booking Screen"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <img src="assessment-docs/screenshots/movie-details-screen.png" width="100%" alt="Login Screen"/>
+    </td>
+    <td>
+      <img src="assessment-docs/screenshots/movie-reviews-screen.png" width="100%" alt="Booking Screen"/>
+    </td>
+  </tr>
+    <tr>
+    <td>
+      <img src="assessment-docs/screenshots/seat-selection-screen-1.png" width="100%" alt="Login Screen"/>
+    </td>
+    <td>
+      <img src="assessment-docs/screenshots/seat-selection-screen-2.png" width="100%" alt="Booking Screen"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <img src="assessment-docs/screenshots/fnb-screen.png" width="100%" alt="Login Screen"/>
+    </td>
+    <td>
+      <img src="assessment-docs/screenshots/booking-summary-screen.png" width="100%" alt="Booking Screen"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <img src="assessment-docs/screenshots/payment-method-screen.png" width="100%" alt="Login Screen"/>
+    </td>
+    <td>
+      <img src="assessment-docs/screenshots/card-payment-screen.png" width="100%" alt="Booking Screen"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <img src="assessment-docs/screenshots/booking-success-screen.png" width="100%" alt="Login Screen"/>
+    </td>
+  </tr>
+</table>
+
+# <font color="#89CFF0">Videos</font>
+You can watch the video recording below to see the full application flow and user interface in action:
+<br><br>
+<video src="assessment-docs/videos/mobile-flow.mp4" width="100%" height="700px" controls></video>
