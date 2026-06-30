@@ -5,8 +5,8 @@ import routeName from '@/services/api';
 import axios from '@/services/axios';
 import { bookingStorage } from '@/services/localStorage';
 import dayjs from 'dayjs';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { Stack, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
 
@@ -24,14 +24,6 @@ const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const COLS = 9;
 const TICKET_PRICE = 15;
 
-const UNAVAILABLE = new Set([
-  "B-4","B-5","B-6",
-  "C-3","C-4","C-5",
-  "D-4","D-5","D-6",
-  "E-3","E-5","E-6","E-7",
-  "F-4","F-5",
-]);
-
 const { width: SW } = Dimensions.get('window');
 
 export default function BookingSeats() {
@@ -43,6 +35,7 @@ export default function BookingSeats() {
   // Data
   const [listArea, setListArea] = useState([]);
   const [listCinema, setListCinema] = useState([]);
+  const [unavailableSeat, setUnavailableSeat] = useState([]);
 
   // Input
   const [selectedArea, setSelectedArea] = useState('');
@@ -50,14 +43,14 @@ export default function BookingSeats() {
   const [selectedMonth, setSelectedMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDate, setSelectedDate] = useState(today);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedSeats, setSelectedSeats] = useState(new Set([]));
+  const [selectedSeats, setSelectedSeats] = useState([]);
 
   function toggleSeat(id) {
-    setSelectedSeats((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setSelectedSeats(prev =>
+      prev.includes(id)
+        ? prev.filter(seat => seat !== id)
+        : [...prev, id]
+    );
   }
 
   function seatId(row, col) {
@@ -71,11 +64,39 @@ export default function BookingSeats() {
     })
     .join("  ");
 
-  const subTotal = selectedSeats.size * TICKET_PRICE;
+  const subTotal = selectedSeats.length * TICKET_PRICE;
+
+  useFocusEffect(
+    useCallback(() => {
+      setSelectedSeats([]);
+      return () => {};
+    }, [])
+  );
 
   useEffect(() => {
     getArea();
   }, []);
+
+  useEffect(() => {
+    if (selectedCinema && selectedDate && selectedTime) {
+      setSelectedSeats([]);
+
+      const fetchSeats = () => {
+        console.log('Fetching unavailable seats...');
+        getUnavailableSeats();
+      };
+
+      fetchSeats();
+
+      const intervalId = setInterval(() => {
+        fetchSeats();
+      }, 5000);
+
+      return () => {
+        clearInterval(intervalId);
+      };
+    }
+  }, [selectedCinema, selectedDate, selectedTime]);
 
   async function bookSeats() {
     // console.log(movieId);
@@ -106,6 +127,31 @@ export default function BookingSeats() {
           setListArea(response.data.data);
         }
       })
+  }
+
+  async function getUnavailableSeats() {
+    try {
+      const response = await axios.get(
+        routeName({
+          name: 'unavailable_seat',
+          query: {
+            cinema_id: selectedCinema,
+            movie_id: movieId,
+            showtime_slot:
+              dayjs(selectedDate).format('YYYY-MM-DD') +
+              ' ' +
+              selectedTime,
+          },
+        })
+      );
+
+      if (response?.data?.status) {
+        const seatArray = response.data.data.map(item => item.seat);
+        setUnavailableSeat(seatArray ?? []);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   const goPrevMonth = () => {
@@ -259,6 +305,9 @@ export default function BookingSeats() {
           </View>
 
           {/* Seat legend */}
+          {/* {selectedCinema && (
+
+          )} */}
           <Text style={[styles.label, { textAlign: 'center', marginBottom: 10 }]}>
             Select Seat
           </Text>
@@ -296,8 +345,8 @@ export default function BookingSeats() {
                       id={id}
                       row={row}
                       col={ci + 1}
-                      unavailable={UNAVAILABLE.has(id)}
-                      selected={selectedSeats.has(id)}
+                      unavailable={unavailableSeat.includes(id)}
+                      selected={selectedSeats.includes(id)}
                       onPress={toggleSeat}
                     />
                   );
