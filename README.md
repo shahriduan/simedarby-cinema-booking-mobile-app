@@ -22,6 +22,7 @@ API_ENDPOINT=
 Run the following command in your project root terminal to boot up the Metro Bundler:
 ```
 npm start
+npm run android
 ```
 2. **Launch on a Device or Emulator** <br>
 - 🤖 Android Emulator: Press a in your terminal window to open the app inside Android Studio's virtual device.

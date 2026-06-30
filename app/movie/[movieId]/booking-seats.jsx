@@ -3,6 +3,7 @@ import Seat from '@/components/features/booking-seats/Seat.jsx';
 import theme from '@/constants/theme';
 import routeName from '@/services/api';
 import axios from '@/services/axios';
+import { bookingStorage } from '@/services/localStorage';
 import dayjs from 'dayjs';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -77,10 +78,10 @@ export default function BookingSeats() {
   }, []);
 
   async function bookSeats() {
-    console.log(movieId);
-    console.log(selectedCinema);
-    console.log(dayjs(selectedDate).format('YYYY-MM-DD') + ' ' + selectedTime);
-    console.log([...selectedSeats]);
+    // console.log(movieId);
+    // console.log(selectedCinema);
+    // console.log(dayjs(selectedDate).format('YYYY-MM-DD') + ' ' + selectedTime);
+    // console.log([...selectedSeats]);
 
     await axios.post(routeName({ name: 'booking_ticket' }), {
         cinema_id: selectedCinema,
@@ -90,7 +91,8 @@ export default function BookingSeats() {
       })
       .then(response => {
         if (response?.data?.status == true) {
-          // router.push({ name: '/booking/fnb' });
+          bookingStorage.setBookingId(response.data.data.booking.id.toString());
+          router.push('/booking/fnb');
         } else {
           alert(response.data.message);
         }

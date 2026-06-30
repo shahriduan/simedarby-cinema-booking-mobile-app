@@ -160,14 +160,14 @@ const styles = StyleSheet.create({
     paddingTop: 35
   },
   hero: {
-    height: 315,
+    height: 350,
     backgroundColor: '#0A0F1E',
     justifyContent: "space-between",
     position: 'relative',
     overflow: 'hidden',      
   },
   videoBackgroundWrapper: {
-    ...StyleSheet.absoluteFillObject,
+    // ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,

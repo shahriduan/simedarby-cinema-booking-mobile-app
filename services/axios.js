@@ -28,20 +28,20 @@ axiosApi.interceptors.request.use(
 );
 
 // RESPONSE INTERCEPTOR (After response arrives)
-axiosApi.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    // If the server returns 401, the token is dead or invalid
-    if (error.response && error.response.status === 401) {
-      console.log('Token invalid or expired. Logging out...');
+// axiosApi.interceptors.response.use(
+//   (response) => response,
+//   async (error) => {
+//     // If the server returns 401, the token is dead or invalid
+//     if (error.response && error.response.status === 401) {
+//       console.log('Token invalid or expired. Logging out...');
       
-      await authStorage.removeToken();
+//       await authStorage.removeToken();
       
-      router.replace('/'); 
-    }
+//       router.replace('/'); 
+//     }
     
-    // return Promise.reject(error);
-  }
-);
+//     // return Promise.reject(error);
+//   }
+// );
 
 export default axiosApi;

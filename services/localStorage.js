@@ -49,3 +49,24 @@ export const authStorage = {
     }
   }
 };
+
+export const bookingStorage = {
+  setBookingId: async (bookingId) => {
+    try {
+      await AsyncStorage.setItem(storageKey.cartBookingNumber, bookingId);
+    } catch (e) {
+      console.error('Error saving booking ID', e);
+    }
+  },
+
+  getBookingId: async () => {
+    try {
+      const key =  await AsyncStorage.getItem(storageKey.cartBookingNumber);
+      // await getAllStorage(); // Debug purpose
+      return key;
+    } catch (e) {
+      console.error('Error fetching token', e);
+      return null;
+    }
+  },
+};
