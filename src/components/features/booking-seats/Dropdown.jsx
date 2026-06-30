@@ -4,6 +4,9 @@ import { IconButton, Menu } from 'react-native-paper';
 
 export default function Dropdown({ label, value, options, onSelect }) {
   const [open, setOpen] = useState(false);
+
+  const selectedOption = options && options.find(opt => opt.id == value);
+
   return (
     <Menu
       visible={open}
@@ -11,14 +14,22 @@ export default function Dropdown({ label, value, options, onSelect }) {
       anchor={
         <TouchableOpacity style={styles.dropdown} onPress={() => setOpen(true)}>
           <Text style={value ? styles.dropdownValue : styles.dropdownPlaceholder}>
-            {value || label}
+            {selectedOption ? selectedOption.name : label}
           </Text>
           <IconButton icon="chevron-down" iconColor="#8A9BB5" size={18} style={{ margin: 0 }} />
         </TouchableOpacity>
       }
       contentStyle={styles.menuContent}>
       {options.map((opt) => (
-        <Menu.Item key={opt} onPress={() => { onSelect(opt); setOpen(false); }} title={opt} titleStyle={styles.menuItem} />
+        <Menu.Item 
+          key={opt.id} 
+          onPress={() => { 
+            onSelect(opt.id);
+            setOpen(false); 
+          }} 
+          title={opt.name}
+          titleStyle={styles.menuItem} 
+        />
       ))}
     </Menu>
   );

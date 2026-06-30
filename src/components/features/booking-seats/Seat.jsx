@@ -5,7 +5,7 @@ const COLS = 9;
 const SEAT_SIZE = Math.floor((SW - 80) / COLS);
 
 export default function Seat({ id, row, col, unavailable, selected, onPress }) {
-  const bg = unavailable ? '#1C2438' : selected ? '#3A4570' : '#2A3550';
+  const bg = unavailable ? '#1C2438' : selected ? '#a9aebe' : '#2A3550';
 
   return (
     <TouchableOpacity

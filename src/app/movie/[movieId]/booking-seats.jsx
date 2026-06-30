@@ -1,28 +1,27 @@
 import Dropdown from '@/components/features/booking-seats/Dropdown.jsx';
 import Seat from '@/components/features/booking-seats/Seat.jsx';
 import theme from '@/constants/theme';
-import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
+import routeName from '@/services/api';
+import axios from '@/services/axios';
+import dayjs from 'dayjs';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
 
-const WEEK_DAYS = [
-  { day: "Wed", date: 17 },
-  { day: "Thur", date: 18 },
-  { day: "Fri", date: 19 },
-  { day: "Sat", date: 20 },
-  { day: "Sun", date: 21 },
-  { day: "Mon", date: 22 },
-  { day: "Tue", date: 23 },
-];
-
+// Show time is hardcoded
 const TIMES = [
-  "9:20AM", "11:40AM", "1:20PM", "3:30PM",
-  "5:40PM", "7:30PM", "9:20PM",
+  { value: '09:20:00', label: '9:20AM' },
+  { value: '11:40:00', label: '11:40AM' },
+  { value: '13:20:00', label: '1:20PM' },
+  { value: '15:30:00', label: '3:30PM' },
+  { value: '17:40:00', label: '5:40PM' },
+  { value: '19:30:00', label: '7:30PM' },
+  { value: '21:20:00', label: '9:20PM' }
 ];
-
-const ROWS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+const ROWS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 const COLS = 9;
+const TICKET_PRICE = 15;
 
 const UNAVAILABLE = new Set([
   "B-4","B-5","B-6",
@@ -36,12 +35,21 @@ const { width: SW } = Dimensions.get('window');
 
 export default function BookingSeats() {
   const router = useRouter();
+  const { movieId } = useLocalSearchParams();
 
-  const [location, setLocation] = useState('');
-  const [cinema, setCinema] = useState('');
-  const [selectedDate, setSelectedDate] = useState(18);
-  const [selectedTime, setSelectedTime] = useState('');
-  const [selectedSeats, setSelectedSeats] = useState(new Set(['F-4', 'F-5']));
+  const today = new Date();
+
+  // Data
+  const [listArea, setListArea] = useState([]);
+  const [listCinema, setListCinema] = useState([]);
+
+  // Input
+  const [selectedArea, setSelectedArea] = useState('');
+  const [selectedCinema, setSelectedCinema] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState(new Set([]));
 
   function toggleSeat(id) {
     setSelectedSeats((prev) => {
@@ -55,14 +63,98 @@ export default function BookingSeats() {
     return `${row}-${col}`;
   }
 
-    const seatLabels = [...selectedSeats]
-      .map((id) => {
-        const [r, c] = id.split('-');
-        return `${r}${c}`;
-      })
-      .join("  ");
+  const seatLabels = [...selectedSeats]
+    .map((id) => {
+      const [r, c] = id.split('-');
+      return `${r}${c}`;
+    })
+    .join("  ");
 
-  const subTotal = selectedSeats.size * 15;
+  const subTotal = selectedSeats.size * TICKET_PRICE;
+
+  useEffect(() => {
+    getArea();
+  }, []);
+
+  async function bookSeats() {
+    console.log(movieId);
+    console.log(selectedCinema);
+    console.log(dayjs(selectedDate).format('YYYY-MM-DD') + ' ' + selectedTime);
+    console.log([...selectedSeats]);
+
+    await axios.post(routeName({ name: 'booking_ticket' }), {
+        cinema_id: selectedCinema,
+        movie_id: movieId,
+        showtime_slot: dayjs(selectedDate).format('YYYY-MM-DD') + ' ' + selectedTime,
+        seats: [...selectedSeats]
+      })
+      .then(response => {
+        if (response?.data?.status == true) {
+          // router.push({ name: '/booking/fnb' });
+        } else {
+          alert(response.data.message);
+        }
+      });
+  }
+
+  async function getArea() {
+    await axios.get(routeName({ name: 'area' }))
+      .then(response => {
+        if (response?.data?.status == true) {
+          setListArea(response.data.data);
+        }
+      })
+  }
+
+  const goPrevMonth = () => {
+    const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    if (selectedMonth > currentMonth) {
+      setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() - 1, 1));
+    }
+  }
+
+  const goNextMonth = () => {
+    setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 1));
+  }
+
+  async function getCinema(targetAreaId) {
+    const response = await axios.get(routeName({ name: 'cinema', query: { area_id: targetAreaId } }))
+      .then(response => {
+        if (response?.data?.status === true) {
+          setListCinema(response.data.data);
+        }
+      });
+  }
+
+  const dates = useMemo(() => {
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth();
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const result = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+
+      // Skip past dates
+      if (date < new Date(today.setHours(0, 0, 0, 0))) {
+        continue;
+      }
+
+      result.push(date);
+    }
+
+    return result;
+  }, [selectedMonth]);
+
+  const handleAreaSelect = (selectedAreaId) => {
+    setSelectedArea(selectedAreaId);
+    setSelectedCinema(null);
+    setListCinema([]);
+    getCinema(selectedAreaId);
+  };
 
   return (
     <>
@@ -89,49 +181,76 @@ export default function BookingSeats() {
           <Text style={styles.label}>Area</Text>
           <Dropdown
             label="Select Area"
-            value={location}
-            options={['Lagos', 'Abuja', 'Port Harcourt', 'Kano']}
-            onSelect={setLocation}
+            value={selectedArea}
+            options={listArea}
+            onSelect={handleAreaSelect}
           />
 
           {/* Cinema location */}
           <Text style={styles.label}>Cinema Location</Text>
           <Dropdown
             label="Select Cinema"
-            value={cinema}
-            options={["Filmhouse IMAX Lekki", "Genesis Cinemas", "Silverbird Cinemas"]}
-            onSelect={setCinema}
+            value={selectedCinema}
+            options={listCinema}
+            onSelect={setSelectedCinema}
           />
 
-          {/* Date picker */}
+          {/* Month picker */}
           <View style={styles.dateHeader}>
             <Text style={styles.label}>Select a date</Text>
           </View>
           <View style={styles.monthRow}>
-            <IconButton icon="chevron-left" iconColor="#FFFFFF" size={18} style={{ margin: 0 }} />
-            <Text style={styles.monthLabel}>November</Text>
-            <IconButton icon="chevron-right" iconColor="#FFFFFF" size={18} style={{ margin: 0 }} />
+            <IconButton 
+              icon="chevron-left" 
+              iconColor="#FFFFFF" 
+              size={18} 
+              style={{ margin: 0 }}     
+              onPress={goPrevMonth}
+              disabled={
+                selectedMonth.getFullYear() === today.getFullYear() &&
+                selectedMonth.getMonth() === today.getMonth()
+              } 
+            />
+            <Text style={styles.monthLabel}>
+              {selectedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </Text>
+
+            <IconButton 
+              icon="chevron-right" 
+              iconColor="#FFFFFF" 
+              size={18} 
+              style={{ margin: 0 }} 
+              onPress={goNextMonth} 
+            />
           </View>
-          <View style={styles.weekRow}>
-            {WEEK_DAYS.map(({ day, date }) => {
-              const active = selectedDate === date;
+
+          {/* Date picker */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {dates.map((date) => {
+              const active = selectedDate.toDateString() === date.toDateString();
+
               return (
-                <TouchableOpacity key={date} style={[styles.dayCell, active && styles.dayCellActive]} onPress={() => setSelectedDate(date)}>
-                  <Text style={[styles.dayName, active && styles.dayNameActive]}>{day}</Text>
-                  <Text style={[styles.dayNum, active && styles.dayNumActive]}>{date}</Text>
+                <TouchableOpacity key={date.toISOString()} style={[ styles.dayCell, active && styles.dayCellActive]} onPress={() => setSelectedDate(date)}>
+                  <Text style={[styles.dayName, active && styles.dayNameActive]}>
+                    {date.toLocaleDateString('en-US', { weekday: 'short' })}
+                  </Text>
+
+                  <Text style={[styles.dayNum, active && styles.dayNumActive]}>
+                    {date.getDate()}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
-          </View>
+          </ScrollView>
 
           {/* Time slot */}
           <Text style={styles.label}>Available Time</Text>
           <View style={styles.timeGrid}>
             {TIMES.map((t) => {
-              const active = selectedTime === t;
+              const active = selectedTime === t.value;
               return (
-                <TouchableOpacity key={t} style={[styles.timeChip, active && styles.timeChipActive]} onPress={() => setSelectedTime(t)}>
-                  <Text style={[styles.timeText, active && styles.timeTextActive]}>{t}</Text>
+                <TouchableOpacity key={t.value} style={[styles.timeChip, active && styles.timeChipActive]} onPress={() => setSelectedTime(t.value)}>
+                  <Text style={[styles.timeText, active && styles.timeTextActive]}>{t.label}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -143,9 +262,9 @@ export default function BookingSeats() {
           </Text>
           <View style={styles.legend}>
             {[
-              { color: "#2A3550", label: "Available" },
-              { color: "#1C2438", label: "Unavailable", cross: true },
-              { color: "#3A4570", label: "Selected", border: true },
+              { color: '#2A3550', label: 'Available' },
+              { color: '#1C2438', label: 'Unavailable', cross: true },
+              { color: '#a9aebe', label: 'Selected', border: true },
             ].map(({ color, label, cross, border }) => (
               <View key={label} style={styles.legendItem}>
                 <View style={[styles.legendBox, { backgroundColor: color, borderWidth: border ? 1 : 0, borderColor: "#5B6FA6" }]}>
@@ -205,7 +324,7 @@ export default function BookingSeats() {
           <TouchableOpacity style={styles.cancelBtn} onPress={() => router.back()}>
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.proceedBtn} onPress={() => router.push('/booking/fnb')}>
+          <TouchableOpacity style={styles.proceedBtn} onPress={() => bookSeats() }>
             <Text style={styles.proceedText}>Proceed</Text>
           </TouchableOpacity>
         </View>
@@ -252,11 +371,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF', 
     fontSize: 13, 
     fontWeight: '600' 
-  },
-  weekRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
   },
   dayCell: {
     alignItems: 'center',
