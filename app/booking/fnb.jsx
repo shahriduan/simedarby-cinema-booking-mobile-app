@@ -72,7 +72,7 @@ export default function Fnb() {
       });
 
       if (response?.data?.status === true) {
-        router.push('/booking/payment-method');
+        router.push('/booking/booking-summary');
       } else {
         alert(response?.data?.message || 'Failed to update food items.');
       }

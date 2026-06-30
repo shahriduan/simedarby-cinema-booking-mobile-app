@@ -14,13 +14,14 @@ export default function Layout() {
           headerTitleAlign: 'center', 
           headerBackVisible: true,
           headerRight: () => (
-            <TouchableOpacity onPress={() => router.push('/booking/payment-method')} activeOpacity={0.7} style={styles.skipButton}>
+            <TouchableOpacity onPress={() => router.push('/booking/booking-summary')} activeOpacity={0.7} style={styles.skipButton}>
               <Text style={styles.skipText}>Skip</Text>
               <MaterialDesignIcons name="chevron-right" size={20} color="#8A9BB5" style={styles.iconStyle} />
             </TouchableOpacity>
           )
         }} 
       />
+      <Stack.Screen name="booking-summary" options={{ title: 'Booking Summary', headerTitleAlign: 'center', headerBackVisible: true }} />
       <Stack.Screen name="payment-method" options={{ title: 'Payment', headerTitleAlign: 'center', headerBackVisible: true }} />
       <Stack.Screen name="card-payment" options={{ title: 'Card Payment', headerTitleAlign: 'center', headerBackVisible: true }} />
       <Stack.Screen name="booking-success" options={{ headerShown: false }} />

@@ -77,26 +77,29 @@ export default function BookingSeats() {
     getArea();
   }, []);
 
-  useEffect(() => {
-    if (selectedCinema && selectedDate && selectedTime) {
-      setSelectedSeats([]);
+  useFocusEffect(
+    useCallback(() => {
+      if (selectedCinema && selectedDate && selectedTime) {
+        setSelectedSeats([]);
 
-      const fetchSeats = () => {
-        console.log('Fetching unavailable seats...');
-        getUnavailableSeats();
-      };
+        const fetchSeats = () => {
+          console.log('Fetching unavailable seats (Screen is active)...');
+          getUnavailableSeats();
+        };
 
-      fetchSeats();
-
-      const intervalId = setInterval(() => {
         fetchSeats();
-      }, 5000);
 
-      return () => {
-        clearInterval(intervalId);
-      };
-    }
-  }, [selectedCinema, selectedDate, selectedTime]);
+        const intervalId = setInterval(() => {
+          fetchSeats();
+        }, 5000);
+
+        return () => {
+          console.log('User left the screen. Polling stopped.');
+          clearInterval(intervalId);
+        };
+      }
+    }, [selectedCinema, selectedDate, selectedTime]) 
+  );
 
   async function bookSeats() {
     // console.log(movieId);
