@@ -89,5 +89,6 @@ Run the following command in your project root terminal to boot up the Metro Bun
 
 # <font color="#89CFF0">Videos</font>
 You can watch the video recording below to see the full application flow and user interface in action:
+Go to `assessment-docs/videos/mobile-flow.mp4` in this repo.
 <br><br>
 <video src="assessment-docs/videos/mobile-flow.mp4" width="100%" height="700px" controls></video>
