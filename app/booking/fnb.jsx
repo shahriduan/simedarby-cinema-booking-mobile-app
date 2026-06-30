@@ -1,77 +1,108 @@
 import MenuCard from '@/components/features/fnb/MenuCard';
+import routeName from '@/services/api';
+import axios from '@/services/axios';
+import { bookingStorage } from '@/services/localStorage';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const { width: SW } = Dimensions.get("window");
 const CARD_WIDTH = (SW - 48) / 2;
 
-const TABS = ["Combo", "Food/Snacks", "Beverages"];
-
-const MENU_DATA = {
-  Combo: [
-    {
-      id: 1,
-      name: "Yummy combo",
-      desc: "2 hotdogs, 2 Lays chips & 4 pepsi",
-      price: 20.00,
-      badge: null,
-    },
-    {
-      id: 2,
-      name: "Fresh Combo",
-      desc: "Large popcorn & candy with pepsi",
-      price: 25.00,
-      badge: null,
-    },
-    {
-      id: 3,
-      name: "Special Combo",
-      desc: "Chicken Shawarma & Pack of fries",
-      originalPrice: 30,
-      price: 25.00,
-      badge: "11%",
-    },
-    {
-      id: 4,
-      name: "Delight Combo",
-      desc: "Double pack medium popcorn",
-      price: 20.00,
-      badge: null,
-    },
-  ],
-  "Food/Snacks": [
-    { id: 5, name: "Popcorn (Large)", desc: "Buttered large popcorn bucket", price: 15.00, badge: null },
-    { id: 6, name: "Hot Dog", desc: "Classic beef hot dog with mustard", price: 12.00, badge: null },
-    { id: 7, name: "Nachos", desc: "Crispy nachos with cheese dip", price: 18.00, badge: null },
-    { id: 8, name: "Shawarma", desc: "Chicken shawarma with fries", price: 22.00, badge: "5%" },
-  ],
-  Beverages: [
-    { id: 9, name: "Pepsi (500ml)", desc: "Chilled Pepsi bottle", price: 5.00, badge: null },
-    { id: 10, name: "Juice Box", desc: "Assorted fruit juice box", price: 7.00, badge: null },
-    { id: 11, name: "Water (1L)", desc: "Still mineral water", price: 3.00, badge: null },
-    { id: 12, name: "Smoothie", desc: "Mixed berry smoothie", price: 12.00, badge: "10%" },
-  ],
+const transformMenuData = (rawData) => {
+  const result = {};
+  rawData.forEach((categoryGroup) => {
+    result[categoryGroup.category] = categoryGroup.items.map((item, index) => {
+      return {
+        id: item.id,
+        name: item.name,
+        desc: item.description,
+        price: item.unit_price,
+        originalPrice: item.original_price ?? null,
+        badge: item.badge ?? null,
+      }
+    });
+  });
+  return result;
 };
 
 export default function Fnb() {
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState('Combo');
-  const [quantities, setQuantities] = useState({});
+  const [menu, setMenu] = useState([]);
+  const [activeTab, setActiveTab] = useState(null);
+  const [quantities, setQuantities] = useState([]); // [{ fnb_id, quantity }]
 
-  const allItems = Object.values(MENU_DATA).flat();
-  const totalItems = allItems.reduce((sum, item) => sum + (quantities[item.id] || 0), 0);
-  const subTotal = allItems.reduce((sum, item) => sum + (quantities[item.id] || 0) * item.price, 0);
+  // Helper to read current qty for an item
+  const getQty = (fnbId) => quantities.find((q) => q.fnb_id === fnbId)?.quantity || 0;
+
+  // Recompute only when raw menu data changes
+  const MENU_DATA = useMemo(() => transformMenuData(menu), [menu]);
+  const TABS = useMemo(() => Object.keys(MENU_DATA), [MENU_DATA]);
+  const allItems = useMemo(() => Object.values(MENU_DATA).flat(), [MENU_DATA]);
+
+  const totalItems = allItems.reduce((sum, item) => sum + getQty(item.id), 0);
+  const subTotal = allItems.reduce((sum, item) => sum + getQty(item.id) * item.price, 0);
 
   const currentItems = MENU_DATA[activeTab] || [];
 
-  function increase(id) {
-    setQuantities((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+  useEffect(() => {
+    getFnb();
+  }, []);
+
+  async function getFnb() {
+    try {
+      const response = await axios.get(routeName({ name: 'fnb_menu' }));
+      if (response?.data?.status === true) {
+        const data = response.data.data;
+        setMenu(data);
+        setActiveTab(data[0]?.category ?? null); // default to first tab once data arrives
+      }
+    } catch (error) {
+      console.error('Failed to fetch FnB menu:', error);
+    }
   }
 
-  function decrease(id) {
-    setQuantities((prev) => ({ ...prev, [id]: Math.max((prev[id] || 0) - 1, 0) }));
+  async function submitFnb() {
+    try {
+      const bookingId = await bookingStorage.getBookingId();
+
+      const response = await axios.post(routeName({ name: 'submit_fnb', params: { booking_id: bookingId } }), { 
+        fnb: quantities 
+      });
+
+      if (response?.data?.status === true) {
+        console.log(response.data);
+        router.push('/booking/payment-method');
+      } else {
+        alert(response?.data?.message || 'Failed to update food items.');
+      }
+    } catch (error) {
+      console.error('Failed to submit FnB:', error);
+      alert('A network error occurred. Please try again.');
+    }
+  }
+
+  function increase(fnbId) {
+    setQuantities((prev) => {
+      const existing = prev.find((q) => q.fnb_id === fnbId);
+      if (existing) {
+        return prev.map((q) =>
+          q.fnb_id === fnbId ? { ...q, quantity: q.quantity + 1 } : q
+        );
+      }
+      return [...prev, { fnb_id: fnbId, quantity: 1 }];
+    });
+  }
+
+  function decrease(fnbId) {
+    setQuantities((prev) =>
+      prev
+        .map((q) =>
+          q.fnb_id === fnbId ? { ...q, quantity: Math.max(q.quantity - 1, 0) } : q
+        )
+        .filter((q) => q.quantity > 0) // optional: drop zero-qty entries entirely
+    );
   }
 
   return (
@@ -93,18 +124,22 @@ export default function Fnb() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.grid}>
         {currentItems.map((item, i) => {
-          // Pair cards in rows
           if (i % 2 !== 0) return null;
 
           const next = currentItems[i + 1];
 
           return (
             <View key={item.id} style={styles.row}>
-              <MenuCard item={item} qty={quantities[item.id] || 0} onIncrease={() => increase(item.id)} onDecrease={() => decrease(item.id)} />
+              <MenuCard
+                item={item}
+                qty={getQty(item.id)}
+                onIncrease={() => increase(item.id)}
+                onDecrease={() => decrease(item.id)}
+              />
               {next ? (
                 <MenuCard
                   item={next}
-                  qty={quantities[next.id] || 0}
+                  qty={getQty(next.id)}
                   onIncrease={() => increase(next.id)}
                   onDecrease={() => decrease(next.id)}
                 />
@@ -126,14 +161,14 @@ export default function Fnb() {
         <View style={[styles.summaryBox, styles.summaryBoxRight]}>
           <Text style={styles.summaryLabel}>SUB-TOTAL</Text>
           <Text style={styles.summaryValue}>
-            RM {subTotal.toLocaleString()}
+            RM {Number(subTotal).toFixed(2)}
           </Text>
         </View>
       </View>
 
       {/* Confirm button */}
       <View style={styles.footer}>
-        <TouchableOpacity style={[styles.confirmBtn, totalItems === 0 && styles.confirmBtnDisabled]} activeOpacity={0.85} onPress={() => router.push('/booking/payment-method')}>
+        <TouchableOpacity style={[styles.confirmBtn, totalItems === 0 && styles.confirmBtnDisabled]} activeOpacity={0.85} onPress={() => submitFnb()}>
           <Text style={styles.confirmText}>Confirm</Text>
         </TouchableOpacity>
       </View>
@@ -185,36 +220,6 @@ const styles = StyleSheet.create({
     gap: 16,
     marginBottom: 16,
   },
-
-//   // Stepper
-//   stepper: {
-//     flexDirection: "row",
-//     alignItems: "center",
-//     backgroundColor: "#1C2438",
-//     borderRadius: 5,
-//     overflow: "hidden",
-//     height: 26,
-//   },
-//   stepBtn: {
-//     width: 26,
-//     height: 26,
-//     alignItems: "center",
-//     justifyContent: "center",
-//     backgroundColor: "#2A3550",
-//   },
-//   stepBtnText: {
-//     color: "#FFFFFF",
-//     fontSize: 16,
-//     fontWeight: "700",
-//     lineHeight: 20,
-//   },
-//   stepCount: {
-//     color: "#FFFFFF",
-//     fontSize: 12,
-//     fontWeight: "600",
-//     width: 26,
-//     textAlign: "center",
-//   },
 
   // Summary
   summary: {

@@ -18,12 +18,7 @@ export default function MenuCard({ item, qty, onIncrease, onDecrease }) {
       {/* Price row */}
       <View style={styles.priceRow}>
         <View>
-          {item.originalPrice && (
-            <Text style={styles.originalPrice}>
-              RM {item.originalPrice.toLocaleString()}
-            </Text>
-          )}
-          <Text style={styles.price}>RM {item.price.toLocaleString()}</Text>
+          <Text style={styles.price}>RM {Number(item.price).toFixed(2)}</Text>
         </View>
         <Stepper value={qty} onIncrease={onIncrease} onDecrease={onDecrease} />
       </View>
