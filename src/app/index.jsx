@@ -1,5 +1,5 @@
 import Snackbar from '@/components/common/Snackbar';
-import { routeName } from '@/services/api';
+import routeName from '@/services/api';
 import { authStorage } from '@/services/localStorage';
 import axios from 'axios';
 import { useRouter } from 'expo-router';

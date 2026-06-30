@@ -61,9 +61,5 @@ function routeName(object) {
     return findRouteNameRouter(object);
 }
 
-export {
-    findRouteNameRouter,
-    removeRouteNameRouter,
-    routeName
-};
+export default routeName;
 

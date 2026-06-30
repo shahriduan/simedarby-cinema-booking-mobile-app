@@ -1,5 +1,6 @@
 const apiRoute = [
     { path: '/api/authenticate', name: 'auth', method: 'post' },
+    { path: '/api/logout', name: 'logout', method: 'post' },
     { path: '/api/user', name: 'user', method: 'get' },
     
     // Movies

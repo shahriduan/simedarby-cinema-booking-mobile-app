@@ -1,38 +1,53 @@
 import spacing from '@/constants/spacing';
 import theme from '@/constants/theme';
+import routeName from '@/services/api';
+import axios from '@/services/axios';
 import { expo } from '@root/app.json';
 import { Link, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { AppRegistry, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AppRegistry, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Avatar, IconButton, Searchbar } from 'react-native-paper';
-
-function MovieCard({ title }) {
-  return (
-    <View style={styles.movieCard}>
-      <View style={styles.posterPlaceholder} />
-      <View style={styles.movieCardFooter}>
-        <Text style={styles.movieCardTitle} numberOfLines={2}>
-          {title}
-        </Text>
-        <IconButton icon="dots-vertical" iconColor="#8A9BB5" size={18} style={{ margin: 0, marginTop: -4 }} />
-      </View>
-    </View>
-  );
-}
 
 export default function Index() {
   const router = useRouter();
 
+  // Input
   const [searchInput, setSearchInput] = useState('');
 
-  const NEW_RELEASES = [
-  { id: 1, title: "Venom: Let There Be Carnage" },
-  { id: 2, title: "007: No Time To Die" },
-  { id: 3, title: "Shang-Chi: Legend of the Ten Rings" },
-  { id: 4, title: "Omo Ghetto (The Saga)" },
-  { id: 5, title: "Dune" },
-  { id: 6, title: "The Suicide Squad" },
-];
+  // Data
+  const [name, setName] = useState('');
+  const [movies, setMovies] = useState([]);
+
+  useEffect(() => {
+    getUser();
+    getMovies();
+  }, []);
+
+  async function getUser() {
+    await axios.get(routeName({ name: 'user' }))
+    .then(response => {
+      if (response?.data?.status == true) {
+        setName(response.data.data.first_name);        
+      }
+    })
+  }
+
+  async function getMovies() {
+    await axios.get(routeName({ name: 'movies' }))
+    .then(response => {
+      if (response?.data?.status == true) {
+        console.log(response.data.data);
+        setMovies(response.data.data);
+      }
+    })
+  }
+
+  const filteredMovies = movies.filter((movie) => {
+    const searchString = searchInput.toLowerCase().trim();
+    const matchesTitle = movie.title?.toLowerCase().includes(searchString);
+
+    return matchesTitle;
+  });
   
   return (
     <View style={styles.root}>
@@ -41,7 +56,7 @@ export default function Index() {
         <View style={styles.headerLeft}>
           <Avatar.Icon size={46} icon="account" style={{ backgroundColor: "#1C2438" }} color="#8A9BB5" />
           <View style={{ flex: 1 }}>
-            <Text style={{ color: "#FFFFFF", fontSize: 16, letterSpacing: 0.2 }}>Hello, <Text style={{ fontWeight: '700' }}>Raymond</Text></Text>
+            <Text style={{ color: "#FFFFFF", fontSize: 16, letterSpacing: 0.2 }}>Hello, <Text style={{ fontWeight: '700' }}>{name}</Text></Text>
             <Text style={styles.subGreeting}>
               Want to go see a movie? Get your ticket today
             </Text>
@@ -70,20 +85,35 @@ export default function Index() {
 
       {/* Movie list */}
       <FlatList
-        data={NEW_RELEASES}
+        data={filteredMovies}
         keyExtractor={(item) => item.id.toString()}
         numColumns={2}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 10 }}
-        columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 12 }}
+        columnWrapperStyle={{ justifyContent: 'flex-start', marginBottom: 12 }}
+        ListEmptyComponent={searchInput ? (<Text style={styles.emptyText}>No movies match "{searchInput}"</Text>) : null}
         renderItem={({ item }) => (
           <Link href={{ pathname: '/movie/[movieId]', params: { movieId: item.id }}} asChild>
-            <TouchableOpacity style={{ flex: 1, marginHorizontal: 6 }}>
-              <MovieCard title={item.title} />
+            <TouchableOpacity style={{ width: '47%', marginHorizontal: '1.5%' }}>
+              <MovieCard title={item.title} posterUrl={item.poster_url} />
             </TouchableOpacity>
           </Link>
         )}
       />
+    </View>
+  );
+}
+
+function MovieCard({ title, posterUrl }) {
+  return (
+    <View style={styles.movieCard}>
+      <Image source={{ uri: posterUrl }} style={styles.poster} resizeMode="cover" />
+      <View style={styles.movieCardFooter}>
+        <Text style={styles.movieCardTitle} numberOfLines={2}>
+          {title}
+        </Text>
+        <IconButton icon="dots-vertical" iconColor="#8A9BB5" size={18} style={{ margin: 0, marginTop: -4 }} />
+      </View>
     </View>
   );
 }
@@ -153,15 +183,14 @@ const styles = StyleSheet.create({
 
   // Movie Card Component
   movieCard: {
-    flex: 1,
+    width: '100%',
     backgroundColor: '#131929',
     borderRadius: 10,
     overflow: "hidden"
   },
-  posterPlaceholder: {
+  poster: {
     width: '100%',
-    aspectRatio: 0.72,
-    backgroundColor: '#8A9BB530',
+    height: 300,
   },
   movieCardFooter: {
     flexDirection: 'row',
@@ -178,4 +207,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     lineHeight: 16,
   },
+  emptyText: { 
+    color: '#8A9BB5', 
+    textAlign: 'center', 
+    marginTop: 40, 
+    fontSize: 14 
+  }
 });
