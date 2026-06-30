@@ -2,25 +2,22 @@ import MovieDetailsTab from '@/components/features/movie-details/MovieDetailsTab
 import RatingsTab from '@/components/features/movie-details/RatingsTab';
 import StarRating from '@/components/features/movie-details/StarRating';
 import theme from '@/constants/theme';
+import routeName from '@/services/api';
+import axios from '@/services/axios';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Chip, IconButton } from 'react-native-paper';
+import YoutubePlayer from 'react-native-youtube-iframe';
 
-const MOVIE = {
-  title: "Venom: Let There Be Carnage",
-  genres: ["Action", "Adventure", "Sci-fi"],
-  releaseDate: "October 2021",
-  ageRating: "15+",
-  duration: "1h 37m",
-  rating: 4.0,
-  reviewCount: 20,
-  synopsis:
-    "Eddie Brock is still struggling to co-exist with the shape-shifting extraterrestrial Venom. When deranged serial killer Cletus Kasady also becomes host to an alien symbiote...",
-  casts: "Tom Hardy, Woody Harrelson, Michelle Williams, Naomi Harris",
-  director: "Andy Serkis",
-  writers: "Kelly Marcel (Screenplay by), Tom Hardy (Story by)",
-};
+const { width } = Dimensions.get('window');
+
+function getYouTubeVideoId(url) {
+  if (!url) return null; // Added safe protection check
+  const regex = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regex);
+  return (match && match[2].length === 11) ? match[2] : null;
+}
 
 // Select showtime and seats screen
 export default function Index() {
@@ -28,39 +25,67 @@ export default function Index() {
 
   const { movieId } = useLocalSearchParams();
 
+  // Behaviour
   const [activeTab, setActiveTab] = useState('details'); // Example 'details' or 'ratings'
+
+  // Data
+  const [movieDetails, setMovieDetails] = useState({});
+
+  const youtubeVideoId = movieDetails?.trailer_url 
+      ? getYouTubeVideoId(movieDetails.trailer_url) 
+      : null;
+
+  useEffect(() => {
+    getMovieDetails();
+  }, []);
+
+  async function getMovieDetails() {
+    await axios.get(routeName({ name: 'movie_details', params: { movie_id: movieId } }))
+    .then(response => {
+      if (response?.data?.status == true) {
+        setMovieDetails(response.data.data);
+      }
+    })
+  }
 
   return (
     <View style={styles.root}>
       <View style={styles.hero}>
-        {/* Top icon */}
         <View style={styles.heroNav}>
-          <IconButton icon="arrow-left" iconColor="#FFFFFF" size={22} style={{ margin: 0 }} onPress={() => router.back() } />
-          <IconButton icon="arrow-expand" iconColor="#FFFFFF" size={20} style={{ margin: 0 }} onPress={() => alert('You click fullscreen button')} />
+          <IconButton icon="arrow-left" iconColor="#FFFFFF" size={22} style={{ margin: 0 }} onPress={() => router.back()} />
         </View>
-        {/* Trailer watermark */}
-        <View style={styles.heroFooter}>
-          <View style={styles.trailerBadge}>
-            <Text style={styles.trailerText}>TRAILER</Text>
+
+        {/* Video */}
+        {youtubeVideoId ? (
+          <View style={styles.videoBackgroundWrapper}>
+            <YoutubePlayer
+              height={280} 
+              width={width}
+              videoId={youtubeVideoId}
+              play={true}
+              webViewProps={{ androidLayerType: 'hardware'}}
+              initialPlayerParams={{ controls: false, modestbranding: true, rel: false }}
+            />
           </View>
-          <IconButton icon="volume-off" iconColor="#FFFFFF" size={20} style={{ margin: 0 }} />
-        </View>
+        ) : (
+          <View style={[styles.videoBackgroundWrapper, { backgroundColor: '#131929' }]} />
+        )}
       </View>
 
       {/* Detail sheet */}
       <View style={styles.sheet}>
         {/* Movie info header */}
         <View style={styles.infoHeader}>
-          <View style={styles.poster} />
+          <Image source={{ uri: movieDetails.poster_url }} style={styles.poster} resizeMode="cover" />
           <View style={{ flex: 1, gap: 5 }}>
             {/* Meta */}
             <View style={styles.titleRow}>
-              <Text style={styles.movieTitle}>Venom: Let There Be Carnage</Text>
+              <Text style={styles.movieTitle}>{movieDetails.title}</Text>
               <IconButton icon="heart-outline" iconColor="#4A5978" size={20} style={{ margin: 0 }} onPress={() => alert('You click favourite button')} />
             </View>
             {/* Genre */}
             <View style={styles.chips}>
-              {MOVIE.genres.map((g) => (
+              {movieDetails?.genre?.map((g) => (
                 <Chip key={g} style={styles.chip} textStyle={styles.chipText} compact>
                   {g}
                 </Chip>
@@ -70,17 +95,17 @@ export default function Index() {
             {/* Info row */}
             <View style={styles.infoRow}>
               <IconButton icon="calendar-outline" iconColor="#8A9BB5" size={14} style={{ margin: 0 }} />
-              <Text style={styles.infoText}>{MOVIE.releaseDate}</Text>
+              <Text style={styles.infoText}>{movieDetails.release_date}</Text>
               <IconButton icon="message-outline" iconColor="#8A9BB5" size={14} style={{ margin: 0 }} />
-              <Text style={styles.infoText}>{MOVIE.ageRating}</Text>
+              <Text style={styles.infoText}>{movieDetails.classification}</Text>
               <IconButton icon="clock-outline" iconColor="#8A9BB5" size={14} style={{ margin: 0 }} />
-              <Text style={styles.infoText}>{MOVIE.duration}</Text>
+              <Text style={styles.infoText}>{movieDetails.duration}</Text>
             </View>
 
             {/* Star rating */}
             <View style={styles.ratingRow}>
-              <StarRating rating={MOVIE.rating} size={16} />
-              <Text style={styles.ratingText}>{MOVIE.rating}/5 ({MOVIE.reviewCount})</Text>
+              <StarRating rating={movieDetails.rating} size={16} />
+              <Text style={styles.ratingText}>{movieDetails.rating}/5 ({movieDetails.total_rating_people})</Text>
             </View>
           </View>
         </View>
@@ -105,8 +130,13 @@ export default function Index() {
         {/* Tab content */}
         <View style={{ flex: 1 }}>
           {activeTab === "details" 
-            ? <MovieDetailsTab synopsis={MOVIE.synopsis} casts={MOVIE.casts} director={MOVIE.director} writers={MOVIE.writers} /> 
-            : <RatingsTab reviewCount={MOVIE.reviewCount} />
+            ? <MovieDetailsTab synopsis={movieDetails.synopsis} casts={movieDetails.casts} director={movieDetails.director} writers={movieDetails.writers} /> 
+            : <RatingsTab 
+                reviewCount={movieDetails.total_rating_people} 
+                rating={movieDetails.rating}
+                customerReviews={movieDetails.movie_reviews}
+                ratingBreakdown={movieDetails.rating_breakdown}
+              />
           }
         </View>
       </View>
@@ -130,35 +160,24 @@ const styles = StyleSheet.create({
     paddingTop: 35
   },
   hero: {
-    height: 220,
-    backgroundColor: '#8A9BB530',
+    height: 315,
+    backgroundColor: '#0A0F1E',
     justifyContent: "space-between",
+    position: 'relative',
+    overflow: 'hidden',      
+  },
+  videoBackgroundWrapper: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
   },
   heroNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
     paddingTop: 20,
-  },
-  heroFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-  },
-  trailerBadge: {
-    borderWidth: 1,
-    borderColor: '#FFFFFF80',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 3,
-  },
-  trailerText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 1,
+    zIndex: 5,
   },
 
   // Sheet
@@ -179,7 +198,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 110,
     borderRadius: 8,
-    backgroundColor: '#8A9BB530',
     flexShrink: 0,
   },
   titleRow: {

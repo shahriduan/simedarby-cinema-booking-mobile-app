@@ -36,7 +36,6 @@ export default function Index() {
     await axios.get(routeName({ name: 'movies' }))
     .then(response => {
       if (response?.data?.status == true) {
-        console.log(response.data.data);
         setMovies(response.data.data);
       }
     })

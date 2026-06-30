@@ -2,50 +2,21 @@ import StarRating from '@/components/features/movie-details/StarRating';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconButton } from 'react-native-paper';
 
-const RATING_BREAKDOWN = [
-  { stars: 5, count: 8 },
-  { stars: 4, count: 6 },
-  { stars: 3, count: 4 },
-  { stars: 2, count: 2 },
-  { stars: 1, count: 0 },
-];
-
-const CUSTOMER_REVIEWS = [
-  {
-    id: 1,
-    rating: 3,
-    title: "INTERESTING MOVIE!",
-    body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam sed risus elementum du. In.",
-  },
-  {
-    id: 2,
-    rating: 2,
-    title: "NOTHING SPECIAL",
-    body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tortor enim auter dolor sit, lorem id aliquam.",
-  },
-  {
-    id: 3,
-    rating: 2,
-    title: "NOTHING SPECIAL",
-    body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Tortor enim auter dolor sit, lorem id aliquam.",
-  },
-];
-
-export default function RatingsTab({ reviewCount }) {
-  const maxCount = Math.max(...RATING_BREAKDOWN.map((r) => r.count));
+export default function RatingsTab({ reviewCount, rating, customerReviews, ratingBreakdown }) {
+  const maxCount = Math.max(...ratingBreakdown.map((r) => r.count));
   
   return (
     <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 12, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
       {/* Overall */}
       <View style={styles.overallRow}>
         <IconButton icon="star" iconColor="#F5A623" size={20} style={{ margin: 0 }} />
-        <Text style={styles.overallScore}>4.0</Text>
+        <Text style={styles.overallScore}>{rating}</Text>
         <Text style={styles.overallCount}>({reviewCount} Reviews)</Text>
       </View>
 
       {/* Breakdown bars */}
       <View style={styles.barsContainer}>
-        {RATING_BREAKDOWN.map((r) => (
+        {ratingBreakdown.map((r) => (
           <RatingBar key={r.stars} stars={r.stars} count={r.count} maxCount={maxCount} />
         ))}
       </View>
@@ -53,14 +24,14 @@ export default function RatingsTab({ reviewCount }) {
       {/* Customer reviews header */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Customer Reviews</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => alert('You click See all button')}>
           <Text style={{ color: '#c2c8d4', fontSize: 12, fontWeight: '500' }}>See all</Text>
         </TouchableOpacity>
       </View>
 
       {/* Review cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingRight: 16 }}>
-        {CUSTOMER_REVIEWS.map((r) => (
+        {customerReviews?.map((r) => (
           <ReviewCard key={r.id} review={r} />
         ))}
       </ScrollView>
@@ -72,9 +43,9 @@ function ReviewCard({ review }) {
   return (
     <View style={styles.reviewCard}>
       <StarRating rating={review.rating} size={12} />
-      <Text style={styles.reviewTitle}>{review.title}</Text>
+      <Text style={styles.reviewTitle}>{review.review_title}</Text>
       <Text style={styles.reviewBody} numberOfLines={3}>
-        {review.body}
+        {review.review_content}
       </Text>
     </View>
   );
