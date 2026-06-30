@@ -1,3 +1,6 @@
+import routeName from '@/services/api';
+import axios from '@/services/axios';
+import { bookingStorage } from '@/services/localStorage';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -17,6 +20,27 @@ export default function CardPayment() {
     cardNumber.replace(/\s/g, "").length === 16 &&
     expiry.length === 5 &&
     cvv.length >= 3;
+
+  async function submitPayment() {
+    try {
+      if (isReady == true) {
+        const bookingId = await bookingStorage.getBookingId();
+
+        const response = await axios.post(routeName({ name: 'make_payment', params: { booking_id: bookingId } }));
+
+        if (response?.data?.status === true) {
+          router.push('/booking/booking-success');
+        } else {
+          alert(response?.data?.message || 'Failed to submit payment.');
+        } 
+      } else {
+        alert('Please fill in card details');
+      }
+    } catch (error) {
+      console.error('Failed to submit FnB:', error);
+      alert('A network error occurred. Please try again.');
+    }
+  }
 
   return (
     <KeyboardAvoidingView style={styles.root} behavior="height">
@@ -55,7 +79,7 @@ export default function CardPayment() {
           />
         </View>
 
-        <TouchableOpacity style={[styles.payBtn, !isReady && styles.payBtnDisabled]} activeOpacity={0.85} onPress={() => router.push('/booking/booking-success')}>
+        <TouchableOpacity style={[styles.payBtn, !isReady && styles.payBtnDisabled]} activeOpacity={0.85} onPress={() => submitPayment()}>
           <Text style={styles.payText}>Pay RM 30.00</Text>
         </TouchableOpacity>
       </ScrollView>

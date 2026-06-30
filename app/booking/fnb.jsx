@@ -72,7 +72,6 @@ export default function Fnb() {
       });
 
       if (response?.data?.status === true) {
-        console.log(response.data);
         router.push('/booking/payment-method');
       } else {
         alert(response?.data?.message || 'Failed to update food items.');
