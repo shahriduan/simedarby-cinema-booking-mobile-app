@@ -38,6 +38,8 @@ Run the following command in your project root terminal to boot up the Metro Bun
 - Android Emulator: Press `a` in your terminal window to open the app inside Android Studio's virtual device.
 - Physical Device (Android): Open the Expo Go app and tap "Scan QR Code". Then scan the QR code that is showing inside your terminal.
 
+   > 💡 **Note** : If you are unable to access the API endpoint from a physical device, please check your firewall settings. The API port may be blocked by the firewall. Ensure that the port used by the API server is allowed and accessible from devices on the same network.
+
 # <font color="#89CFF0">Screenshots</font>
 <table border="0">
   <tr>
